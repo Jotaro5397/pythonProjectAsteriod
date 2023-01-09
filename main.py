@@ -17,13 +17,14 @@ class Spaceship:
         rotated_rect.center = (self.x + self.width / 2, self.y + self.height / 2)
         game_display.blit(rotated_image, rotated_rect)
 
+
 # Initialize Pygame
 pygame.init()
 
 # Set up the display
 display_width = 800
 display_height = 600
-game_display = pygame.display.set_mode((display_width, display_height))
+WIN = pygame.display.set_mode((display_width, display_height))
 pygame.display.set_caption('Asteroid Shooter')
 
 # Set up the player's spaceship
@@ -59,22 +60,22 @@ lasers = []
 # Set up the asteroids
 asteroids = []
 
-# Add some asteroids to the list
-asteroid_1 = {
-    'x': 50,
-    'y': 50,
-}
-asteroid_2 = {
-    'x': 100,
-    'y': 100,
-}
-asteroids.append(asteroid_1)
-asteroids.append(asteroid_2)
+def create_asteroid():
+    asteroid = {
+        'x': random.randint(0, display_width - asteroid_width),
+        'y': 0,
+    }
+    asteroids.append(asteroid)
+
+
+
 
 
 def draw_game_objects(game_display, spaceship, asteroids, lasers):
     game_display.blit(background_image, (0, 0))
     spaceship.draw(game_display)
+    spaceship.x = spaceship_x
+    spaceship.y = spaceship_y
     for asteroid in asteroids:
         game_display.blit(asteroid_image, (asteroid['x'], asteroid['y']))
     for laser in lasers:
@@ -82,19 +83,28 @@ def draw_game_objects(game_display, spaceship, asteroids, lasers):
 
     pygame.display.update()
 
+# Create some initial asteroids
+for i in range(5):
+    create_asteroid()
 
 run = True
+FPS = 60
+clock = pygame.time.Clock()
 
-draw_game_objects(game_display, spaceship, asteroids, lasers)
 
 
 # Set up the game loop
 while run:
+
+    clock.tick(FPS)
+    draw_game_objects(WIN, spaceship, asteroids, lasers)
     # Handle events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            pygame.quit()
+            run = False
             sys.exit()
+
+
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 # Create a new laser and add it to the list
@@ -103,37 +113,45 @@ while run:
                     'y': laser_y,
                 }
                 lasers.append(laser)
-    # Handle keyboard input
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_LEFT] and spaceship_x > 0:
-        spaceship_x -= 0.2
-    if keys[pygame.K_RIGHT] and spaceship_x < display_width - spaceship_width:
-        spaceship_x += 0.2
-    if keys[pygame.K_UP] and spaceship_y > 0:
-        spaceship_y -= 0.2
-    if keys[pygame.K_DOWN] and spaceship_y < display_height - spaceship_height:
-        spaceship_y += 0.2
+                # Handle keyboard input
+                keys = pygame.key.get_pressed()
+                if keys[pygame.K_LEFT] and spaceship_x > 0:
+                    spaceship_x -= 0.5
+                    spaceship_angle -= 5
+                if keys[pygame.K_RIGHT] and spaceship_x < display_width - spaceship_width:
+                    spaceship_x += 0.5
+                    spaceship_angle += 5
+                if keys[pygame.K_UP] and spaceship_y > 0:
+                    spaceship_y -= 0.5
+                if keys[pygame.K_DOWN] and spaceship_y < display_height - spaceship_height:
+                    spaceship_y += 0.5
 
-    # Move the asteroids
-    asteroid_y += asteroid_speed
-    # Check if any lasers have hit the asteroid
-    for laser in lasers:
-        if laser['x'] > asteroid_x and laser['x'] < asteroid_x + asteroid_width and laser[
-            'y'] < asteroid_y + asteroid_height:
-            # The laser has hit the asteroid, so remove the asteroid and the laser
-            lasers.remove(laser)
-            asteroid_x = random.randint(0, display_width - asteroid_width)
-            asteroid_y = 0
-    # Move the lasers
-    for laser in lasers:
-        laser['y'] -= laser_speed
-    # Draw the game objects
-    game_display.blit(background_image, (0, 0))
-    rotated_spaceship = pygame.transform.rotate(spaceship_image, spaceship_angle)
-    rotated_rect = rotated_spaceship.get_rect()
-    rotated_rect.center = (spaceship_x + spaceship_width / 2, spaceship_y + spaceship_height / 2)
-    game_display.blit(rotated_spaceship, rotated_rect)
-    for asteroid in asteroids:
-        game_display.blit(asteroid_image, (asteroid['x'], asteroid['y']))
+        # Move the asteroids
+        for asteroid in asteroids:
+            asteroid['y'] += asteroid_speed
+            # Check if the asteroid has left the screen
+            if asteroid['y'] > display_height:
+                # Remove the asteroid from the list
+                asteroids.remove(asteroid)
+                # Create a new asteroid
+                create_asteroid()
+            # Check if any lasers have hit the asteroid
+            for laser in lasers:
+                if laser['x'] > asteroid['x'] and laser['x'] < asteroid['x'] + asteroid_width and laser['y'] < asteroid[
+                    'y'] + asteroid_height:
+                    # The laser has hit the asteroid, so remove the asteroid and the laser
+                    asteroids.remove(asteroid)
+                    lasers.remove(laser)
+                    # Create a new asteroid
+                    create_asteroid()
+        # Move the lasers
+        for laser in lasers:
+            laser['y'] -= laser_speed
+        # Draw the game objects
+        WIN.fill((0, 0, 0))
+        WIN.blit(background_image, (0, 0))
+        WIN.blit(spaceship_image, (spaceship_x, spaceship_y))
+        for asteroid in asteroids:
+            WIN.blit(asteroid_image, (asteroid['x'], asteroid['y']))
 
 pygame.quit()
