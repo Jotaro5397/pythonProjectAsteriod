@@ -68,9 +68,6 @@ def create_asteroid():
     asteroids.append(asteroid)
 
 
-
-
-
 def draw_game_objects(game_display, spaceship, asteroids, lasers):
     game_display.blit(background_image, (0, 0))
     spaceship.draw(game_display)
@@ -95,46 +92,35 @@ clock = pygame.time.Clock()
 
 # Set up the game loop
 while run:
-
     clock.tick(FPS)
     draw_game_objects(WIN, spaceship, asteroids, lasers)
-    # Handle events
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            run = False
-            sys.exit()
+
+    # Update the position of the asteroids and check for collisions
+    for asteroid in asteroids:
+        asteroid['y'] += asteroid_speed
+        # Check if the asteroid has left the screen
+        if asteroid['y'] > display_height:
+            # Remove the asteroid from the list
+            asteroids.remove(asteroid)
+            # Create a new asteroid
+            create_asteroid()
 
 
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                # Create a new laser and add it to the list
-                laser = {
-                    'x': laser_x,
-                    'y': laser_y,
-                }
-                lasers.append(laser)
-                # Handle keyboard input
-                keys = pygame.key.get_pressed()
-                if keys[pygame.K_LEFT] and spaceship_x > 0:
-                    spaceship_x -= 0.5
-                    spaceship_angle -= 5
-                if keys[pygame.K_RIGHT] and spaceship_x < display_width - spaceship_width:
-                    spaceship_x += 0.5
-                    spaceship_angle += 5
-                if keys[pygame.K_UP] and spaceship_y > 0:
-                    spaceship_y -= 0.5
-                if keys[pygame.K_DOWN] and spaceship_y < display_height - spaceship_height:
-                    spaceship_y += 0.5
 
-        # Move the asteroids
-        for asteroid in asteroids:
-            asteroid['y'] += asteroid_speed
-            # Check if the asteroid has left the screen
-            if asteroid['y'] > display_height:
-                # Remove the asteroid from the list
-                asteroids.remove(asteroid)
-                # Create a new asteroid
-                create_asteroid()
+            # Handle keyboard input
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_LEFT] and spaceship_x > 0:
+                spaceship_x -= 0.5
+                spaceship_angle -= 5
+            if keys[pygame.K_RIGHT] and spaceship_x < display_width - spaceship_width:
+                spaceship_x += 0.5
+                spaceship_angle += 5
+            if keys[pygame.K_UP] and spaceship_y > 0:
+                spaceship_y -= 0.5
+            if keys[pygame.K_DOWN] and spaceship_y < display_height - spaceship_height:
+                spaceship_y += 0.5
+
+
             # Check if any lasers have hit the asteroid
             for laser in lasers:
                 if laser['x'] > asteroid['x'] and laser['x'] < asteroid['x'] + asteroid_width and laser['y'] < asteroid[
@@ -144,9 +130,27 @@ while run:
                     lasers.remove(laser)
                     # Create a new asteroid
                     create_asteroid()
-        # Move the lasers
-        for laser in lasers:
-            laser['y'] -= laser_speed
+            # Move the lasers
+            for laser in lasers:
+                laser['y'] -= laser_speed
+
+            # Handle events
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    run = False
+                    sys.exit()
+
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        # Create a new laser and add it to the list
+                        laser = {
+                            'x': laser_x,
+                            'y': laser_y,
+                        }
+                        lasers.append(laser)
+
+
+
         # Draw the game objects
         WIN.fill((0, 0, 0))
         WIN.blit(background_image, (0, 0))
