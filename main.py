@@ -1,22 +1,77 @@
 import pygame
 import random
+import math
+
 import sys
 
 class Spaceship:
     def __init__(self, image, width, height, x, y, angle):
+        # Initialize the spaceship's attributes
         self.image = image
         self.width = width
         self.height = height
         self.x = x
         self.y = y
         self.angle = angle
+        self.speed = 5
 
-    def draw(self, game_display):
+    def move_left(self):
+        new_x = self.x - self.speed * math.cos(math.radians(self.angle))
+        new_y = self.y - self.speed * math.sin(math.radians(self.angle))
+        if new_x >= 0 and new_x <= display_width - self.width:
+            self.x = new_x
+        if new_y >= 0 and new_y <= display_height - self.height:
+            self.y = new_y
+
+    def move_right(self):
+        new_x = self.x + self.speed * math.cos(math.radians(self.angle))
+        new_y = self.y + self.speed * math.sin(math.radians(self.angle))
+        if new_x >= 0 and new_x <= display_width - self.width:
+            self.x = new_x
+        if new_y >= 0 and new_y <= display_height - self.height:
+            self.y = new_y
+
+    def move_up(self):
+        new_x = self.x + self.speed * math.sin(math.radians(self.angle))
+        new_y = self.y - self.speed * math.cos(math.radians(self.angle))
+        if new_x >= 0 and new_x <= display_width - self.width:
+            self.x = new_x
+        if new_y >= 0 and new_y <= display_height - self.height:
+            self.y = new_y
+
+    def move_down(self):
+        new_x = self.x - self.speed * math.sin(math.radians(self.angle))
+        new_y = self.y + self.speed * math.cos(math.radians(self.angle))
+        if new_x >= 0 and new_x <= display_width - self.width:
+            self.x = new_x
+        if new_y >= 0 and new_y <= display_height - self.height:
+            self.y = new_y
+
+    def rotation_handle_input(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT] and self.x > 0:
+            self.x -= 0.5
+            self.angle -= 5
+        if keys[pygame.K_LEFT] and self.x < display_width - self.width:
+            self.x += 0.5
+            self.angle += 5
+
+    def movement_handle_input(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_a] and self.x > 0:
+            self.move_left()
+        if keys[pygame.K_d] and self.x < display_width - self.width:
+            self.move_right()
+        if keys[pygame.K_w] and self.y > 0:
+            self.move_up()
+        if keys[pygame.K_s] and self.y < display_height - self.height:
+            self.move_down()
+
+    def draw(self, WIN):
         rotated_image = pygame.transform.rotate(self.image, self.angle)
         rotated_rect = rotated_image.get_rect()
         rotated_rect.center = (self.x + self.width / 2, self.y + self.height / 2)
-        game_display.blit(rotated_image, rotated_rect)
-
+        WIN.blit(rotated_image, rotated_rect)
 
 # Initialize Pygame
 pygame.init()
@@ -54,6 +109,9 @@ laser_speed = 5
 
 background_image = pygame.image.load('imgs/background.jpg')
 
+
+
+
 # Create a list to store all the lasers on the screen
 lasers = []
 
@@ -71,8 +129,7 @@ def create_asteroid():
 def draw_game_objects(game_display, spaceship, asteroids, lasers):
     game_display.blit(background_image, (0, 0))
     spaceship.draw(game_display)
-    spaceship.x = spaceship_x
-    spaceship.y = spaceship_y
+
     for asteroid in asteroids:
         game_display.blit(asteroid_image, (asteroid['x'], asteroid['y']))
     for laser in lasers:
@@ -85,6 +142,8 @@ for i in range(5):
     create_asteroid()
 
 run = True
+
+
 FPS = 60
 clock = pygame.time.Clock()
 
@@ -92,8 +151,18 @@ clock = pygame.time.Clock()
 
 # Set up the game loop
 while run:
-    clock.tick(FPS)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
+
+    spaceship.rotation_handle_input()
+    spaceship.movement_handle_input()
+
+    # Draw the game objects
     draw_game_objects(WIN, spaceship, asteroids, lasers)
+
+    # Wait for a while
+    clock.tick(FPS)
 
     # Update the position of the asteroids and check for collisions
     for asteroid in asteroids:
@@ -105,20 +174,9 @@ while run:
             # Create a new asteroid
             create_asteroid()
 
-
-
-            # Handle keyboard input
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_LEFT] and spaceship_x > 0:
-                spaceship_x -= 0.5
-                spaceship_angle -= 5
-            if keys[pygame.K_RIGHT] and spaceship_x < display_width - spaceship_width:
-                spaceship_x += 0.5
-                spaceship_angle += 5
-            if keys[pygame.K_UP] and spaceship_y > 0:
-                spaceship_y -= 0.5
-            if keys[pygame.K_DOWN] and spaceship_y < display_height - spaceship_height:
-                spaceship_y += 0.5
+            # # Handle keyboard input
+            # pygame.key.init()
+            # keys = pygame.key.get_pressed()
 
 
             # Check if any lasers have hit the asteroid
@@ -134,11 +192,7 @@ while run:
             for laser in lasers:
                 laser['y'] -= laser_speed
 
-            # Handle events
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    run = False
-                    sys.exit()
+
 
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
