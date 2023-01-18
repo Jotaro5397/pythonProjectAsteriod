@@ -285,9 +285,7 @@ while run:
     for laser in lasers:
         laser.update()
         laser.draw(WIN)
-    for laser in lasers:
-        pygame.draw.line(WIN, (255, 0, 0), (laser['x'], laser['y']), (laser['x'], laser['y'] - laser_length),
-                         laser_width)
+
 
     # Check if any lasers have hit the asteroid
     for laser in lasers:
