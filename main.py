@@ -116,7 +116,7 @@ class Asteroid(pygame.sprite.Sprite):
 
 class Laser:
     def __init__(self, x, y, angle):
-        self.image = pygame.image.load("laser.png")
+        self.image = pygame.image.load("imgs/laser.png")
         self.x = x
         self.y = y
         self.angle = angle
@@ -216,13 +216,22 @@ laser_x = spaceship_x + spaceship_width / 2 - laser_width / 2
 laser_y = spaceship_y
 laser_speed = 5
 
+# Create a list to store all the lasers on the screen
+lasers = []
+
+laser_image = pygame.Surface((5, 20))
+laser_image.fill((255, 0, 0))
+
+for laser in lasers:
+    WIN.blit(laser_image, (laser['x'], laser['y']))
+
+
 background_image = pygame.image.load('imgs/background.jpg')
 
 
 
 
-# Create a list to store all the lasers on the screen
-lasers = []
+
 
 def draw_game_objects(game_display, spaceship, asteroids, lasers):
     game_display.blit(background_image, (0, 0))
@@ -242,6 +251,7 @@ if keys[pygame.K_SPACE]:
         'y': spaceship.y,
     }
     lasers.append(laser)
+    print("shooting")
 
 run = True
 
@@ -254,6 +264,35 @@ while run:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                # Create a new laser and add it to the list
+                laser = {
+                    'x': spaceship.x + spaceship.width / 2,
+                    'y': spaceship.y
+                }
+                lasers.append(laser)
+
+
+    if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_SPACE:
+            spaceship.shoot()
+
+    if keys[pygame.K_SPACE]:
+        laser = Laser(spaceship.x, spaceship.y, spaceship.angle)
+        lasers.append(laser)
+    for laser in lasers:
+        laser.update()
+
+
+    for laser in lasers:
+        pygame.draw.line(WIN, (255, 255, 255), (laser['x'], laser['y']), (laser['x'], laser['y'] - 10), 2)
+
+        # Move the lasers
+        for laser in lasers:
+            laser['y'] -= laser_speed
+            speed = 0.1
+            laser_x += speed
 
     spaceship.rotation_handle_input()
     spaceship.movement_handle_input()
@@ -274,17 +313,6 @@ while run:
             asteroids.remove(asteroid)
             # Create a new asteroid
             spawn_asteroids()
-
-    if event.type == pygame.KEYDOWN:
-        if event.key == pygame.K_SPACE:
-            spaceship.shoot()
-
-    if keys[pygame.K_SPACE]:
-        laser = Laser(spaceship.x, spaceship.y, spaceship.angle)
-        lasers.append(laser)
-    for laser in lasers:
-        laser.update()
-        laser.draw(WIN)
 
 
     # Check if any lasers have hit the asteroid
@@ -310,8 +338,6 @@ while run:
 
     # Draw the background image
     WIN.blit(background_image, (0, 0))
-
-
 
     # Draw the game objects
     draw_game_objects(WIN, spaceship, asteroids, lasers,)
