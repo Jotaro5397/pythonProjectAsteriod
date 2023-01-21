@@ -112,8 +112,10 @@ class Asteroid(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
-        self.speed = random.randint(1, 5)
-        self.speed = random.randint(3, 10)  # Generate a random speed for each asteroid
+        self.width = width
+        self.height = height
+        self.speed = random.randint(3, 10) # Generate a random speed for each asteroid
+        self.rect = pygame.Rect(self.rect.x, self.rect.y, self.width, self.height)
 
     def draw(self, WIN):
         pygame.draw.circle(WIN, (255, 255, 255), (int(self.x), int(self.y)), self.radius)
@@ -124,13 +126,18 @@ class Asteroid(pygame.sprite.Sprite):
 
 
 class Laser:
-    def __init__(self, x, y, angle):
+    def __init__(self, x, y, width, height):
+        super().__init__()
         self.image = pygame.image.load("imgs/laser.png")
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
-        self.angle = angle
+        self.width = width
+        self.height = height
         self.speed = 1
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+
+
         self.last_move_time = pygame.time.get_ticks()
 
     def move(self):
@@ -181,6 +188,10 @@ num_of_asteroids = 5
 
 # Set up the asteroids
 asteroids = []
+
+asteroid_rect_list = [asteroid.rect for asteroid in asteroids]
+
+
 
 for i in range(5):
     asteroid_x = random.randint(0, display_width - asteroid_width)
@@ -241,10 +252,17 @@ laser_image.fill((255, 0, 0))
 
 # Create a list to store all the lasers on the screen
 lasers = []
+laser = Laser(laser_x, laser_y, laser_width, laser_height)
+lasers.append(laser)
+
+
 
 for laser in lasers:
-    WIN.blit(laser_image, (laser['x'], laser['y']))
+    WIN.blit(laser_image, (laser.x, laser.y))
 
+laser = {'x': laser_x, 'y': laser_y, 'width': laser_width, 'height': laser_height}
+
+laser_rect = pygame.Rect(laser['x'], laser['y'], laser['width'], laser['height'])
 
 def update_lasers(self):
     for laser in self.lasers:
@@ -253,13 +271,6 @@ def update_lasers(self):
             self.lasers.remove(laser)
 
 
-def check_collision(laser, asteroid):
-    laser_x, laser_y = laser.x, laser.y
-    asteroid_x, asteroid_y = asteroid.x, asteroid.y
-
-    if abs(laser_x - asteroid_x) < 20 and abs(laser_y - asteroid_y) < 20:
-        return True
-    return False
 
 
 
@@ -316,20 +327,16 @@ while run:
     if keys[pygame.K_SPACE]:
         laser = Laser(spaceship.x, spaceship.y, spaceship.angle)
         lasers.append(laser)
-    for laser in lasers:
-        laser.update()
 
 
 
-        # Move the lasers
-        for laser in lasers:
-            laser['y'] -= laser_speed
-            speed = 0000
-            laser_x += speed
+
+
+
+
 
     spaceship.rotation_handle_input()
     spaceship.movement_handle_input()
-
 
 
     # Wait for a while
@@ -349,29 +356,10 @@ while run:
             # Create a new asteroid
             spawn_asteroids()
 
-    for laser in spaceship.lasers:
-        laser.move()
-        for asteroid in asteroids:
-            if laser.rect.colliderect(asteroid.rect):
-                lasers.remove(laser)
-                asteroids.remove(asteroid)
 
 
 
 
-
-
-    # Move the lasers
-    for laser in lasers:
-        laser['y'] -= laser_speed
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                # Create a new laser and add it to the list
-                laser = {
-                    'x': laser_x,
-                    'y': laser_y,
-                }
-                lasers.append(laser)
 
     # Draw the background image
     WIN.blit(background_image, (0, 0))
