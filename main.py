@@ -1,17 +1,22 @@
 import pygame
 import random
 import math
+import pygame.font
 
 import sys
 
 
 # Initialize health bar attributes
+
+
 health = 100
 health_bar_color = (255, 0, 0)
 health_bar_width = 150
 health_bar_height = 20
 health_bar_x = 20
 health_bar_y = 20
+
+
 
 def draw_health_bar(WIN):
     # Draw the health bar
@@ -239,6 +244,19 @@ class HealthBar:
         pygame.draw.rect(win, self.color, (self.x, self.y, self.current_health, self.height))
 
 
+class Fuel(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.Surface((10, 10))
+        self.image.fill((0, 255, 0))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.fall_speed = 0.5  # change this to make fuel fall slower
+
+    def update(self):
+        self.rect.y += self.fall_speed
+
 # Set up the laser
 laser_image = pygame.image.load('imgs/laser.png')
 laser_width = 10
@@ -284,11 +302,16 @@ if keys[pygame.K_SPACE]:
     lasers.append(laser)
     print("shooting")
 
+
+
 run = True
 
 FPS = 60
 clock = pygame.time.Clock()
 
+# Create an energy bar represented as a timer
+energy_bar = pygame.time.Clock()
+energy_bar_time = 80  # starting time in seconds
 
 # Set up the game loop
 while run:
@@ -316,11 +339,30 @@ while run:
     spaceship.rotation_handle_input()
     spaceship.movement_handle_input()
 
+    energy_bar.tick(60)  # ticks the timer every frame
+    energy_bar_time -= 1 / 60  # decrease time by 1/60th of a second every frame
+    if energy_bar_time <= 0:
+        # End the game or do something else when the energy bar runs out
+        break
+
     # Wait for a while
     clock.tick(FPS)
 
     all_asteroids.update()
     all_asteroids.draw(WIN)
+
+    # Check if the spaceship has collided with an asteroid
+    spaceship_rect = pygame.Rect(spaceship.x, spaceship.y, spaceship.width, spaceship.height)
+    for asteroid in asteroids:
+        asteroid_rect = pygame.Rect(asteroid.rect.x, asteroid.rect.y, asteroid_width, asteroid_height)
+        if spaceship_rect.colliderect(asteroid_rect):
+            # The spaceship has collided with the asteroid, so reduce the player's health
+            health -= 10
+            # Remove the asteroid
+            if asteroid in asteroids:
+                asteroids.remove(asteroid)
+            # Create a new asteroid
+            spawn_asteroids()
 
     # Update the position of the asteroids and check for collisions
     for asteroid in asteroids:
@@ -350,10 +392,7 @@ while run:
     for asteroid in asteroids:
         asteroid.update()
 
-        if spaceship.check_collision(asteroid.hitbox):
-            # Do something when collision occurs, such as decreasing health or destroying the asteroid
-            spaceship.health -= 10
-            asteroids.remove(asteroid)
+
 
     # Draw the background image
     WIN.blit(background_image, (0, 0))
@@ -366,7 +405,10 @@ while run:
     # Update the display
     pygame.display.update()
 
-
+# Draw the energy bar on the screen
+    energy_bar_rect = pygame.Rect(20, 50, energy_bar_time, 25)
+    pygame.draw.rect(WIN, (255, 0, 0), energy_bar_rect)
+    pygame.display.update()
 
 pygame.quit()
 
