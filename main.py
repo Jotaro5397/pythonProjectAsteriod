@@ -7,6 +7,8 @@ import sys
 
 
 # Initialize health bar attributes
+pygame.font.init()
+font = pygame.font.SysFont("Arial", 25)
 
 
 health = 100
@@ -278,10 +280,6 @@ for laser in lasers:
 background_image = pygame.image.load('imgs/background.jpg')
 
 
-
-
-
-
 def draw_game_objects(game_display, spaceship, asteroids, lasers):
     game_display.blit(background_image, (0, 0))
     spaceship.draw(game_display)
@@ -291,16 +289,6 @@ def draw_game_objects(game_display, spaceship, asteroids, lasers):
     for laser in lasers:
         game_display.blit(laser_image, (laser['x'], laser['y']))
 
-
-keys = pygame.key.get_pressed()
-if keys[pygame.K_SPACE]:
-    # Create a new laser and add it to the list
-    laser = {
-        'x': spaceship.x,
-        'y': spaceship.y,
-    }
-    lasers.append(laser)
-    print("shooting")
 
 
 
@@ -320,11 +308,19 @@ while run:
             run = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
+                energy_bar_time -= 0.5  # Decrement energy by 10 each time laser is fireda
                 laser = {
                     'x': spaceship.x + spaceship.width / 2,
                     'y': spaceship.y
                 }
                 lasers.append(laser)
+
+    if energy_bar_time <= 30:
+        spaceship.velocity = 0.5
+    elif energy_bar_time <= 60:
+        spaceship.velocity = 3
+    else:
+        spaceship.velocity = 6
 
     # Draw the lasers
     for laser in lasers:
@@ -393,9 +389,18 @@ while run:
         asteroid.update()
 
 
+    text = font.render('Energy Low', True, (255, 0, 0))
+    if energy_bar_time <= 30:
+        warning = "Energy low!"
+        pygame.display.set_caption(warning)
+        warning_surf = font.render(warning, True, (255, 0, 0))
+        WIN.blit(warning_surf, (WIN.get_width() / 2, WIN.get_height() / 2))
+        pygame.display.update()
+
 
     # Draw the background image
     WIN.blit(background_image, (0, 0))
+
 
     # Draw the game objects
     draw_game_objects(WIN, spaceship, asteroids, lasers)
