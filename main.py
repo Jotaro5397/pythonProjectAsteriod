@@ -31,6 +31,18 @@ def draw_health_bar(WIN):
     pygame.draw.rect(WIN, (0, 255, 0), (health_bar_x, health_bar_y, current_health_width, health_bar_height))
 
 
+class HealthBar:
+    def __init__(self, x, y, width, height):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.color = (255, 0, 0)
+        self.current_health = 100
+
+    def draw(self, win):
+        pygame.draw.rect(win, self.color, (self.x, self.y, self.current_health, self.height))
+
 class Spaceship:
     def __init__(self, image, width, height, x, y, angle):
         # Initialize the spaceship's attributes
@@ -186,6 +198,24 @@ class EnergyCapsule(pygame.sprite.Sprite):
         self.hitbox.y += self.speed
 
 
+class HealthCapsule(pygame.sprite.Sprite):
+    def __init__(self, image, width, height, x, y):
+        super().__init__()
+        self.image = image
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.speed = random.randint(1, 5)
+        self.hitbox = pygame.Rect(x, y, width, height) #create hitbox using x,y,width,height of asteroid
+
+
+
+    def update(self):
+        self.rect.y += self.speed
+        self.hitbox.x = self.rect.x
+        self.hitbox.y += self.speed
+
+
 def main():
     # Initialize Pygame
     pygame.init()
@@ -210,9 +240,15 @@ spaceship_y = display_height - spaceship_height
 spaceship_angle = 0
 spaceship = Spaceship(spaceship_image, spaceship_width, spaceship_height, spaceship_x, spaceship_y, spaceship_angle)
 
+#set up energy capsule
 energy_capsule_image = pygame.image.load('imgs/energy.png')
 energy_capsule_width = 1
 energy_capsule_height = 1
+
+#set up health capsule
+health_capsule_image = pygame.image.load('imgs/health.png')
+health_capsule_width = 1
+health_capsule_height = 1
 
 # Set up the asteroids
 asteroid_image = pygame.image.load('imgs/asteroid.png')
@@ -241,29 +277,6 @@ def spawn_asteroids():
     y_pos = -50
     asteroid = Asteroid(asteroid_image, 50, 50, x_pos, y_pos)
     asteroids.append(asteroid)
-
-
-
-def draw_game_objects(WIN, spaceship, asteroids, lasers):
-    WIN.blit(spaceship.image, (spaceship.x, spaceship.y))
-    for asteroid in asteroids:
-        WIN.blit(asteroid.image, (asteroid.x, asteroid.y))
-    for laser in lasers:
-        WIN.blit(laser.image, (laser.x, laser.y))
-
-
-class HealthBar:
-    def __init__(self, x, y, width, height):
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.color = (255, 0, 0)
-        self.current_health = 100
-
-    def draw(self, win):
-        pygame.draw.rect(win, self.color, (self.x, self.y, self.current_health, self.height))
-
 
 
 
@@ -309,9 +322,31 @@ def spawn_energy_capsules():
 
 
 
+health_capsules = []
+
+num_of_health_capsules = 1
+
+for i in range(5):
+    health_capsule_x = random.randint(0, display_width - health_capsule_width)
+    health_capsule_y = random.randint(-display_height, - health_bar_height)
+    health_capsule = HealthCapsule(health_capsule_image, health_capsule_width, health_bar_height, health_capsule_x, health_capsule_y)
+    health_capsules.append(health_capsule)
 
 
-def draw_game_objects(game_display, spaceship, asteroids, lasers, energy_capsules):
+all_health_capsules = pygame.sprite.Group()
+health_capsule = HealthCapsule(energy_capsule_image, 50, 50, 0, -50)
+all_health_capsules.add(health_capsule)
+
+
+def spawn_health_capsules():
+    x_pos = random.randint(0, display_width - 50)
+    y_pos = -50
+    health_capsule = HealthCapsule(health_capsule_image, 50, 50, x_pos, y_pos)
+    health_capsules.append(health_capsule)
+
+
+
+def draw_game_objects(game_display, spaceship, asteroids, lasers, energy_capsules, health_capsules):
     game_display.blit(background_image, (0, 0))
     spaceship.draw(game_display)
 
@@ -321,6 +356,8 @@ def draw_game_objects(game_display, spaceship, asteroids, lasers, energy_capsule
         game_display.blit(laser_image, (laser['x'], laser['y']))
     for energy_capsule in energy_capsules:
         game_display.blit(energy_capsule_image, energy_capsule.rect)
+    for health_capsule in health_capsules:
+        game_display.blit(health_capsule_image, health_capsule.rect)
 
 
 
@@ -355,10 +392,16 @@ while run:
     else:
         spaceship.velocity = 6
 
+# when capsules leave the screen delete them an spawn more
     if energy_capsule.rect.y >= display_height:
         energy_capsules.remove(energy_capsule)
         # Create a new asteroid
         spawn_energy_capsules()
+
+    if health_capsule.rect.y >= display_height:
+        health_capsules.remove(health_capsule)
+        # Create a new asteroid
+        spawn_health_capsules()
 
 
     # Draw the lasers
@@ -387,6 +430,21 @@ while run:
     all_asteroids.draw(WIN)
     all_energy_capsules.update()
     all_energy_capsules.draw(WIN)
+    all_health_capsules.update()
+    all_health_capsules.draw(WIN)
+
+    #collision with health capsule
+    spaceship_rect = pygame.Rect(spaceship.x, spaceship.y, spaceship.width, spaceship.height)
+    for health_capsule in health_capsules:
+        health_capsule_rect = pygame.Rect(health_capsule.rect.x, health_capsule.rect.y, health_capsule_width, health_bar_height)
+        if spaceship_rect.colliderect(health_capsule_rect):
+            # The spaceship has collided with the asteroid, so reduce the player's health
+            health += 10
+            # Remove the asteroid
+            if health_capsule in health_capsules:
+                health_capsules.remove(health_capsule)
+            # Create a new asteroid
+            spawn_health_capsules()
 
     # collision with ship and capsule
     spaceship_rect = pygame.Rect(spaceship.x, spaceship.y, spaceship.width, spaceship.height)
@@ -446,12 +504,23 @@ while run:
     for energy_capsule in energy_capsules:
         energy_capsule.update()
 
+    # Update the asteroids
+    for health_capsule in health_capsules:
+        health_capsule.update()
+
 
 
     if energy_bar_time <= 30:
         warning = "Energy low!"
         pygame.display.set_caption(warning)
         warning_surf = font.render(warning, True, (250, 0, 0))
+        WIN.blit(warning_surf, (WIN.get_width() / 2, WIN.get_height() / 2))
+        pygame.display.update()
+
+    if health <= 30:
+        warning = "Structeral integrity low!"
+        pygame.display.set_caption(warning)
+        warning_surf = font.render(warning, True, (200, 0, 0))
         WIN.blit(warning_surf, (WIN.get_width() / 2, WIN.get_height() / 2))
         pygame.display.update()
 
@@ -462,7 +531,7 @@ while run:
 
 
 
-    draw_game_objects(WIN, spaceship, asteroids, lasers, energy_capsules)
+    draw_game_objects(WIN, spaceship, asteroids, lasers, energy_capsules, health_capsules)
 
 
     # Draw the health bar
