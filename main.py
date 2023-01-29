@@ -284,10 +284,10 @@ def spawn_asteroids():
     asteroids.append(asteroid)
 
 asteroid_count = 0
-font = pygame.font.Font("freesansbold.ttf", 25)
+font = pygame.font.SysFont("Arial", 25)
 
-countX = 30
-countY = 30
+countX = 700
+countY = 10
 
 def show_score(x,y):
     score = font.render("Score :" + str(asteroid_count), True, ( 255, 255, 255))
@@ -375,6 +375,7 @@ def draw_game_objects(game_display, spaceship, asteroids, lasers, energy_capsule
 
 
 
+
 run = True
 
 FPS = 60
@@ -397,6 +398,7 @@ while run:
                     'y': spaceship.y
                 }
                 lasers.append(laser)
+
 
     if energy_bar_time <= 30:
         spaceship.velocity = 0.5
@@ -429,6 +431,9 @@ while run:
 
     spaceship.rotation_handle_input()
     spaceship.movement_handle_input()
+
+    if health <= 0:
+        break
 
     energy_bar.tick(60)  # ticks the timer every frame
     energy_bar_time -= 1 / 60  # decrease time by 1/60th of a second every frame
@@ -522,23 +527,20 @@ while run:
     for health_capsule in health_capsules:
         health_capsule.update()
 
-    show_score(countX, countY)
 
+        if energy_bar_time <= 30:
+            warning = "Energy low!"
+            pygame.display.set_caption(warning)
+            warning_surf = font.render(warning, True, (250, 0, 0))
+            WIN.blit(warning_surf, (30, 100))
+            pygame.display.update()
 
-
-    if energy_bar_time <= 30:
-        warning = "Energy low!"
-        pygame.display.set_caption(warning)
-        warning_surf = font.render(warning, True, (250, 0, 0))
-        WIN.blit(warning_surf, (WIN.get_width() / 2, WIN.get_height() / 2))
-        pygame.display.update()
-
-    if health <= 30:
-        warning = "Structeral integrity low!"
-        pygame.display.set_caption(warning)
-        warning_surf = font.render(warning, True, (200, 0, 0))
-        WIN.blit(warning_surf, (WIN.get_width() / 2, WIN.get_height() / 2))
-        pygame.display.update()
+        if health <= 30:
+            warning = "Structeral integrity low!"
+            pygame.display.set_caption(warning)
+            warning_surf = font.render(warning, True, (200, 0, 0))
+            WIN.blit(warning_surf, (30, 150))
+            pygame.display.update()
 
 
 
@@ -549,8 +551,7 @@ while run:
     # Draw the health bar
     draw_health_bar(WIN)
 
-
-
+    show_score(countX, countY)
 
     # Update the display
     pygame.display.update()
