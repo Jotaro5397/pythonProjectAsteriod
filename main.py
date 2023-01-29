@@ -27,6 +27,11 @@ def draw_health_bar(WIN):
     # Calculate the width of the part of the health bar that represents the current health
     current_health_width = health / 100 * health_bar_width
 
+    text = font.render(str(health), True, (255, 255, 255))
+
+    # Draw the text object next to the health bar
+    WIN.blit(text, (health_bar_x + health_bar_width + 10, health_bar_y))
+
     # Draw the part of the health bar that represents the current health
     pygame.draw.rect(WIN, (0, 255, 0), (health_bar_x, health_bar_y, current_health_width, health_bar_height))
 
@@ -261,7 +266,7 @@ num_of_asteroids = 6
 # Set up the asteroids
 asteroids = []
 
-for i in range(5):
+for i in range(10):
     asteroid_x = random.randint(0, display_width - asteroid_width)
     asteroid_y = random.randint(-display_height, -asteroid_height)
     asteroid = Asteroid(asteroid_image, asteroid_width, asteroid_height, asteroid_x, asteroid_y)
@@ -278,7 +283,15 @@ def spawn_asteroids():
     asteroid = Asteroid(asteroid_image, 50, 50, x_pos, y_pos)
     asteroids.append(asteroid)
 
+asteroid_count = 0
+font = pygame.font.Font("freesansbold.ttf", 25)
 
+countX = 30
+countY = 30
+
+def show_score(x,y):
+    score = font.render("Score :" + str(asteroid_count), True, ( 255, 255, 255))
+    WIN.blit(score, (x ,y))
 
 # Set up the laser
 laser_image = pygame.image.load('imgs/laser.png')
@@ -302,7 +315,7 @@ energy_capsules = []
 
 num_of_energy_capsules = 1
 
-for i in range(5):
+for i in range(1):
     energy_capsule_x = random.randint(0, display_width - asteroid_width)
     energy_capsule_y = random.randint(-display_height, -asteroid_height)
     energy_capsule = EnergyCapsule(energy_capsule_image, energy_capsule_width, energy_capsule_height, energy_capsule_x, energy_capsule_y)
@@ -326,7 +339,7 @@ health_capsules = []
 
 num_of_health_capsules = 1
 
-for i in range(5):
+for i in range(1):
     health_capsule_x = random.randint(0, display_width - health_capsule_width)
     health_capsule_y = random.randint(-display_height, - health_bar_height)
     health_capsule = HealthCapsule(health_capsule_image, health_capsule_width, health_bar_height, health_capsule_x, health_capsule_y)
@@ -488,6 +501,7 @@ while run:
         for asteroid in asteroids:
             asteroid_rect = pygame.Rect(asteroid.rect.x, asteroid.rect.y, asteroid_width, asteroid_height)
             if laser_rect.colliderect(asteroid.hitbox):
+                asteroid_count += 1
                 # The laser has hit the asteroid, so remove the asteroid and the laser
                 if asteroid in asteroids:
                     asteroids.remove(asteroid)
@@ -507,6 +521,8 @@ while run:
     # Update the asteroids
     for health_capsule in health_capsules:
         health_capsule.update()
+
+    show_score(countX, countY)
 
 
 
@@ -529,11 +545,7 @@ while run:
     # Draw the background image
     WIN.blit(background_image, (0, 0))
 
-
-
     draw_game_objects(WIN, spaceship, asteroids, lasers, energy_capsules, health_capsules)
-
-
     # Draw the health bar
     draw_health_bar(WIN)
 
