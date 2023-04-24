@@ -5,11 +5,31 @@ import pygame.font
 
 import sys
 
+# Initialize pygame mixer
+pygame.mixer.init()
+
+# Load the music file
+pygame.mixer.music.load('imgs/Background.wav')
+
+#Load the background music and play in a loop
+pygame.mixer.music.play(-1)
+
+# Load the shoot sound
+Shoot = pygame.mixer.Sound("imgs/laser.wav")
+
+# Load the  explosion sound
+explode = pygame.mixer.Sound("imgs/explosion.wav")
+
+# Load the health sound
+Heal = pygame.mixer.Sound("imgs/Rechargehealth.wav")
+
+# Load the power sound
+Power = pygame.mixer.Sound("imgs/Powerup.wav")
 
 # Initialize health bar attributes
 pygame.font.init()
-font = pygame.font.SysFont("Arial", 25)
 
+font = pygame.font.SysFont("Arial", 25)
 
 health = 100
 health_bar_color = (255, 0, 0)
@@ -47,6 +67,8 @@ class HealthBar:
 
     def draw(self, win):
         pygame.draw.rect(win, self.color, (self.x, self.y, self.current_health, self.height))
+
+#controls for the ship with hit box to detects collision
 
 class Spaceship:
     def __init__(self, image, width, height, x, y, angle):
@@ -184,7 +206,7 @@ class Laser:
     def draw(self, WIN):
         WIN.blit(self.image, (self.x, self.y))
 
-
+#image for energy capsule
 class EnergyCapsule(pygame.sprite.Sprite):
     def __init__(self, image, width, height, x, y):
         super().__init__()
@@ -202,7 +224,7 @@ class EnergyCapsule(pygame.sprite.Sprite):
         self.hitbox.x = self.rect.x
         self.hitbox.y += self.speed
 
-
+# imsge for health capsule
 class HealthCapsule(pygame.sprite.Sprite):
     def __init__(self, image, width, height, x, y):
         super().__init__()
@@ -228,7 +250,10 @@ def main():
 # Set up the display
 pygame.display.set_caption("Health Bar Example")
 
+background_image2 = pygame.image.load('imgs/BG2.png')
+
 background_image = pygame.image.load('imgs/background.jpg')
+
 
 # Set up the display
 display_width = 800
@@ -276,7 +301,7 @@ all_asteroids = pygame.sprite.Group()
 asteroid = Asteroid(asteroid_image, 50, 50, 0, -50)
 all_asteroids.add(asteroid)
 
-
+# spawns asteroids in a list
 def spawn_asteroids():
     x_pos = random.randint(0, display_width - 50)
     y_pos = -50
@@ -334,7 +359,7 @@ def spawn_energy_capsules():
     energy_capsules.append(energy_capsule)
 
 
-
+# the number of health capsules that will spwan in game and in a list th generate them
 health_capsules = []
 
 num_of_health_capsules = 1
@@ -398,6 +423,7 @@ while run:
                     'y': spaceship.y
                 }
                 lasers.append(laser)
+                Shoot.play()
 
 
     if energy_bar_time <= 30:
@@ -463,6 +489,7 @@ while run:
                 health_capsules.remove(health_capsule)
             # Create a new asteroid
             spawn_health_capsules()
+            Heal.play()
 
     # collision with ship and capsule
     spaceship_rect = pygame.Rect(spaceship.x, spaceship.y, spaceship.width, spaceship.height)
@@ -476,6 +503,7 @@ while run:
                 energy_capsules.remove(energy_capsule)
             # Create a new asteroid
             spawn_energy_capsules()
+            Power.play()
 
     # Check if the spaceship has collided with an asteroid
     spaceship_rect = pygame.Rect(spaceship.x, spaceship.y, spaceship.width, spaceship.height)
@@ -489,6 +517,7 @@ while run:
                 asteroids.remove(asteroid)
             # Create a new asteroid
             spawn_asteroids()
+            explode.play()
 
     # Update the position of the asteroids and check for collisions
     for asteroid in asteroids:
@@ -545,7 +574,10 @@ while run:
 
 
     # Draw the background image
+    WIN.blit(background_image2, (0, 0))
+
     WIN.blit(background_image, (0, 0))
+
 
     draw_game_objects(WIN, spaceship, asteroids, lasers, energy_capsules, health_capsules)
     # Draw the health bar
